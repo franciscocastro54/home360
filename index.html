@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Skybox 360 VR</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      background: #000;
+    }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  let scene, camera, renderer;
+  let sphere;
+  let autoRotateSpeed = 0.02;
+  let isDragging = false;
+  let previousMousePosition = { x: 0, y: 0 };
+
+  init();
+  animate();
+
+  function init() {
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(0, 0, 0.1);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.xr.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    // SKYBOX ESFÉRICO INVERTIDO
+    const geometry = new THREE.SphereGeometry(50, 64, 64);
+    geometry.scale(-1, 1, 1);
+
+    const texture = new THREE.TextureLoader().load("./skybox.jpg");
+    const material = new THREE.MeshBasicMaterial({ map: texture });
+
+    sphere = new THREE.Mesh(geometry, material);
+    scene.add(sphere);
+
+    // MOUSE CONTROLS
+    renderer.domElement.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    });
+    
+    renderer.domElement.addEventListener('mousemove', (e) => {
+      if (isDragging && sphere) {
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+        
+        sphere.rotation.y += deltaX * 0.005;
+        sphere.rotation.x += deltaY * 0.005;
+        
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      }
+    });
+    
+    renderer.domElement.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+    
+    renderer.domElement.addEventListener('mouseleave', () => {
+      isDragging = false;
+    });
+
+    window.addEventListener("resize", onWindowResize);
+
+    // Desactivar drag cuando entre en VR
+    renderer.xr.addEventListener("sessionstart", () => {
+      isDragging = false;
+    });
+  }
+
+  function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  function animate() {
+    renderer.setAnimationLoop(renderScene);
+  }
+
+  function renderScene() {
+    // Auto-rotación del skybox cuando no se está arrastrando
+    if (sphere && !isDragging) {
+      sphere.rotation.y += autoRotateSpeed * 0.016; // aproximadamente 60fps
+    }
+
+    renderer.render(scene, camera);
+  }
+</script>
+</body>
+</html>
