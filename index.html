@@ -79,47 +79,42 @@
       isDragging = false;
     });
 
+    // TOUCH CONTROLS FOR MOBILE
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (isDragging && sphere && e.touches.length === 1) {
+        const deltaX = e.touches[0].clientX - previousMousePosition.x;
+        const deltaY = e.touches[0].clientY - previousMousePosition.y;
+        
+        sphere.rotation.y += deltaX * 0.005;
+        sphere.rotation.x += deltaY * 0.005;
+        
+        previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    renderer.domElement.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+    
+    renderer.domElement.addEventListener('touchcancel', () => {
+      isDragging = false;
+    });
+
     window.addEventListener("resize", onWindowResize);
 
     // Desactivar drag cuando entre en VR
     renderer.xr.addEventListener("sessionstart", () => {
       isDragging = false;
     });
-
-    // TOUCH CONTROLS (móviles)
-renderer.domElement.addEventListener("touchstart", (e) => {
-  if (e.touches.length === 1) {
-    isDragging = true;
-    previousMousePosition = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    };
-  }
-});
-
-renderer.domElement.addEventListener("touchmove", (e) => {
-  if (isDragging && sphere && e.touches.length === 1) {
-    const deltaX = e.touches[0].clientX - previousMousePosition.x;
-    const deltaY = e.touches[0].clientY - previousMousePosition.y;
-
-    sphere.rotation.y += deltaX * 0.005;
-    sphere.rotation.x += deltaY * 0.005;
-
-    previousMousePosition = {
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    };
-  }
-});
-
-// Cuando levanta el dedo
-renderer.domElement.addEventListener("touchend", () => {
-  isDragging = false;
-});
-renderer.domElement.addEventListener("touchcancel", () => {
-  isDragging = false;
-});
-
   }
 
   function onWindowResize() {
